@@ -18,15 +18,16 @@ int main(int, char*[]) {
     HexEncoder hex_encoder;
     std::vector<uint8_t> bytes = hex_encoder.ToBytes(input);
 
+    Base64Bytes base64_bytes = Base64Encoder::Encode(bytes);
     Base64Encoder base64_encoder;
-    Base64Bytes base64_bytes = base64_encoder.Encode(bytes);
     std::string output = base64_encoder.ToString(base64_bytes);
 
     std::cout << "input:    " << input << std::endl;
     std::cout << "expected: " << expected << std::endl;
     std::cout << "output:   " << output << std::endl;
     if (output != expected) {
-        std::cout << "ERROR" << std::endl;
+        std::cerr << "ERROR" << std::endl;
+        return 1;
     }
     return 0;
 }

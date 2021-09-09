@@ -22,7 +22,7 @@ public:
     // Input bits/bytes:    AAAAAABB|BBBBCCCC|CCDDDDDD
     // Output bits/bytes:   XXAAAAAA|XXBBBBBB|XXCCCCCC|XXDDDDDD
     //                      X is don't care.
-    Base64Bytes Encode(const std::vector<uint8_t>& bytes) {
+    static Base64Bytes Encode(const std::vector<uint8_t>& bytes) {
         int state = 0;
         Base64Bytes output;
         for (size_t i = 0; i < bytes.size(); ++i) {
@@ -44,7 +44,7 @@ public:
         return output;
     }
 
-    std::string ToString(const Base64Bytes& encoded_bytes) {
+    std::string ToString(const Base64Bytes& encoded_bytes) const {
         std::string output;
         for (auto byte : encoded_bytes) {
             output.push_back(this->BinaryToBase64Letter(byte));
@@ -55,7 +55,7 @@ public:
 private:
     std::array<char, 64> base64_table_;
 
-    char BinaryToBase64Letter(const uint8_t value) {
+    char BinaryToBase64Letter(const uint8_t value) const {
         return base64_table_[value];
     }
 };
