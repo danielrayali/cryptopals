@@ -12,7 +12,7 @@ int main(int, char*[]) {
     HexEncoder hex_encoder;
     std::vector<uint8_t> left_bytes = hex_encoder.ToBytes(left);
     std::vector<uint8_t> right_bytes = hex_encoder.ToBytes(right);
-    std::vector<uint8_t> xored_bytes = Xor(left_bytes, right_bytes);
+    std::vector<uint8_t> xored_bytes = XorEqual(left_bytes, right_bytes);
 
     std::string xored = hex_encoder.ToString(xored_bytes);
     std::cout << "left:     " << left << std::endl;
