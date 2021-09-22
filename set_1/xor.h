@@ -12,3 +12,11 @@ std::vector<uint8_t> Xor(const std::vector<uint8_t>& left, const std::vector<uin
     }
     return output;
 }
+
+std::vector<uint8_t> XorSingle(const std::vector<uint8_t>& input, const uint8_t key) {
+    std::vector<uint8_t> output(input.size(), 0);
+    for (size_t i = 0; i < input.size(); ++i) {
+        output[i] = input[i] ^ key;
+    }
+    return output;
+}
