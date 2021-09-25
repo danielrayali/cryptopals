@@ -1,4 +1,4 @@
-all: challenge_1 challenge_2 challenge_3 challenge_4 challenge_5 xor
+all: challenge_1 challenge_2 challenge_3 challenge_4 challenge_5 xor challenge_6
 
 challenge_1: challenge_1.cc hex_encoder.h base64_encoder.h
 	clang -g -Wall -Wextra -Werror -std=c++2a -o $@ $< -lstdc++
@@ -18,5 +18,8 @@ challenge_5: challenge_5.cc hex_encoder.h xor.h
 xor: xor_main.cc hex_encoder.h xor.h
 	clang -g -Wall -Wextra -Werror -std=c++2a -o $@ $< -lstdc++
 
+challenge_6: challenge_6.cc bitset.h bitset.cc
+	clang -g -Wall -Wextra -Werror -std=c++2a -o $@ $< bitset.cc -lstdc++
+
 clean:
-	rm -rf challenge_1 challenge_2 challenge_3 challenge_4 challenge_5 xor
+	rm -rf challenge_1 challenge_2 challenge_3 challenge_4 challenge_5 xor challenge_6
