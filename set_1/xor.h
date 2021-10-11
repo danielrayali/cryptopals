@@ -21,17 +21,6 @@ std::vector<uint8_t> XorSingle(const std::vector<uint8_t>& input, const uint8_t 
     return output;
 }
 
-// std::vector<uint8_t> XorRepeat(const std::vector<uint8_t>& longer, const std::vector<uint8_t>& shorter) {
-//     size_t size = longer.size();
-//     size_t shorter_idx = 0;
-//     std::vector<uint8_t> output(size, 0);
-//     for (size_t i = 0; i < size; ++i) {
-//         output[i] = longer[i] ^ shorter[shorter_idx];
-//         shorter_idx = (shorter_idx + 1) % shorter.size();
-//     }
-//     return output;
-// }
-
 class XorRepeatEncoder {
 public:
     XorRepeatEncoder() = default;

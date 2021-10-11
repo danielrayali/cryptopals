@@ -9,40 +9,29 @@
 #include "xor_key_finder.h"
 #include "util.h"
 
-int FindKeySize(const std::vector<uint8_t>& in) {
-    float lowest_weight = std::numeric_limits<float>::max();
-    int likely_keysize = 0;
-    for (int i = 2; i < 40; ++i) {
-        std::vector<uint8_t> first  = Slice(in,     0, i);
-        std::vector<uint8_t> second = Slice(in,     i, i);
-        std::vector<uint8_t> third  = Slice(in, i * 2, i);
-        std::vector<uint8_t> fourth = Slice(in, i * 3, i);
-        float distance[6] = {
-            static_cast<float>(CalculateHammingDistance(first, second)),
-            static_cast<float>(CalculateHammingDistance(first, third)),
-            static_cast<float>(CalculateHammingDistance(first, fourth)),
-            static_cast<float>(CalculateHammingDistance(second, third)),
-            static_cast<float>(CalculateHammingDistance(second, fourth)),
-            static_cast<float>(CalculateHammingDistance(third, fourth))
-        };
-        float weight = distance[0] + distance[1] + distance[2] + distance[3] + distance[4] + distance[5];
-        weight /= 6.0f;
-        weight /= static_cast<float>(i);
-        if (weight < lowest_weight) {
-            lowest_weight = weight;
-            likely_keysize = i;
+int FindKeySize(const std::vector<uint8_t>& input) {
+    float lowest_distance = std::numeric_limits<float>::max();
+    size_t key_size = 0;
+    for (size_t i = 2; i < 40; ++i) {
+        float distance = CalculateHammingDistance(Slice(input, 0, i), Slice(input, i, i));
+        distance /= static_cast<float>(i);
+        if (distance < lowest_distance) {
+            lowest_distance = distance;
+            key_size = i;
         }
     }
-    return likely_keysize;
+    return key_size;
 }
 
-int main(int, char*[]) {
+int main(int, char* argv[]) {
+    // Hamming distance test
     std::string left("this is a test");
     std::string right("wokka wokka!!!");
     std::cout << "First string: " << left << std::endl;
     std::cout << "Second string: " << right << std::endl;
     std::cout << "Hamming distance: " << CalculateHammingDistance({left}, {right}) << std::endl;
 
+    // Base64 test
     Base64 base64;
     std::vector<uint8_t> orig{ 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF };
     std::vector<uint8_t> enc = base64.Encode(orig);
@@ -54,6 +43,7 @@ int main(int, char*[]) {
         }
     }
 
+    // Read the initial input file
     std::ifstream input_file("6.txt");
     std::stringstream input_stream;
     while (!input_file.eof()) {
@@ -63,9 +53,13 @@ int main(int, char*[]) {
     }
     std::string input = input_stream.str();
 
+    // Decode base64
     std::vector<uint8_t> base64_bytes = base64.FromString(input);
     std::vector<uint8_t> encrypted = base64.Decode(base64_bytes);
-    size_t key_size = FindKeySize(encrypted);
+
+    // Find the key size
+    size_t key_size = atoi(argv[1]);
+    // size_t key_size = FindKeySize(encrypted);
     std::cout << "Key size: " << key_size << std::endl;
 
     // Break input into blocks
@@ -77,12 +71,13 @@ int main(int, char*[]) {
         }
     }
 
-    for (int i = 0; i < 10; ++i) {
-        for (size_t j = 0; j < blocks[i].size(); ++j) {
-            std::cout << (int)blocks[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
+    // std::cout << "Blocks:\n";
+    // for (int i = 0; i < 10; ++i) {
+    //     for (size_t j = 0; j < key_size; ++j) {
+    //         std::cout << (int)blocks[i][j] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
 
     // Transpose blocks
     std::vector<std::vector<uint8_t>> transposed;
@@ -95,13 +90,15 @@ int main(int, char*[]) {
         }
     }
 
-    for (int i = 0; i < 3; ++i) {
-        for (size_t j = 0; j < 10; ++j) {
-            std::cout << (int)transposed[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
+    // std::cout << "Transposed: " << std::endl;
+    // for (size_t i = 0; i < key_size; ++i) {
+    //     for (size_t j = 0; j < 10; ++j) {
+    //         std::cout << (int)transposed[i][j] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
 
+    // Search for the key based on the transposed size
     std::vector<uint8_t> keys;
     for (size_t i = 0; i < transposed.size(); ++i) {
         XorKeyFinder finder;
@@ -115,12 +112,12 @@ int main(int, char*[]) {
     }
     std::cout << std::endl;
 
-/*
+    // Decode the encrypted string
     XorRepeatEncoder encoder;
     encoder.SetKey(keys);
     std::vector<uint8_t> output = encoder.Encode(encrypted);
     std::string output_str(output.begin(), output.end());
-    std::cout << "Output: " << output_str << std::endl;
-    */
+    std::cout << "Output: " << output_str.substr(0, 20) << std::endl;
+
     return 0;
 }

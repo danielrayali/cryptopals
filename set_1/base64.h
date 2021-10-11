@@ -84,8 +84,6 @@ public:
         return output;
     }
 
-    // Input would be "HUIfTQsPAh9PE048GmllH0kcDk4TAQsHThsBFkU2AB4BSWQgVB0dQzNTTmVS"
-    // Output would be { }
     std::vector<uint8_t> FromString(const std::string& input) const {
         std::vector<uint8_t> output;
         for (auto letter : input) {

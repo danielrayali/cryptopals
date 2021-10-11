@@ -9,6 +9,7 @@ std::vector<uint8_t> Slice(const std::vector<uint8_t>& input, const size_t index
     std::vector<uint8_t> output;
     for (size_t i = 0; i < size; ++i) {
         if ((index + i) >= input.size()) {
+            std::cerr << "Slice returned early" << std::endl;
             break;
         }
         output.push_back(input.at(index + i));
