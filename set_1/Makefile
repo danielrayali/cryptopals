@@ -1,6 +1,6 @@
 all: challenge_1 challenge_2 challenge_3 challenge_4 challenge_5 xor challenge_6
 
-challenge_1: challenge_1.cc hex_encoder.h base64_encoder.h
+challenge_1: challenge_1.cc hex_encoder.h base64.h
 	clang -g -Wall -Wextra -Werror -std=c++2a -o $@ $< -lstdc++
 
 challenge_2: challenge_2.cc hex_encoder.h xor.h

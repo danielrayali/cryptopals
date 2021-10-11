@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "hex_encoder.h"
-#include "base64_encoder.h"
+#include "base64.h"
 
 int main(int, char*[]) {
     // Challenge 1: Convert hex nibble string to base64 string values
@@ -18,10 +18,9 @@ int main(int, char*[]) {
     HexEncoder hex_encoder;
     std::vector<uint8_t> bytes = hex_encoder.ToBytes(input);
 
-    Base64Bytes base64_bytes = Base64Encoder::Encode(bytes);
-    Base64Encoder base64_encoder;
-    std::string output = base64_encoder.ToString(base64_bytes);
-
+    Base64 base64;
+    std::vector<uint8_t> base64_bytes = base64.Encode(bytes);
+    std::string output = base64.ToString(base64_bytes);
     std::cout << "input:    " << input << std::endl;
     std::cout << "expected: " << expected << std::endl;
     std::cout << "output:   " << output << std::endl;

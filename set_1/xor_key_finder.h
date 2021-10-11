@@ -34,6 +34,7 @@ public:
             if (count > max_count_.back()) {
                 max_count_.push_back(count);
                 max_string_.push_back(std::string(xord.begin(), xord.end()));
+                max_key_.push_back(key);
             }
             key++;
         }
@@ -45,6 +46,10 @@ public:
 
     int GetMaxLetterCount() const {
         return max_count_.back();
+    }
+
+    int GetMaxLetterKey() const {
+        return max_key_.back();
     }
 
     void Print() const {
