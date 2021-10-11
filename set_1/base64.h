@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <map>
 
 class Base64 {
 public:
@@ -18,6 +19,12 @@ public:
             bin_to_letter_[52 + (number - '0')] = number;
             letter_to_bin_[number] = 52 + (number - '0');
         }
+
+        bin_to_letter_[62] = '+';
+        bin_to_letter_[63] = '/';
+        letter_to_bin_['+'] = 62;
+        letter_to_bin_['/'] = 63;
+        letter_to_bin_['='] = 0;
     }
 
     // Input bits/bytes:    AAAAAABB|BBBBCCCC|CCDDDDDD
@@ -82,12 +89,12 @@ public:
     std::vector<uint8_t> FromString(const std::string& input) const {
         std::vector<uint8_t> output;
         for (auto letter : input) {
-            output.push_back(letter_to_bin_[letter]);
+            output.push_back(letter_to_bin_.at(letter));
         }
         return output;
     }
 
 private:
     std::array<char, 64> bin_to_letter_;
-    std::array<uint8_t, 64> letter_to_bin_;
+    std::map<char, uint8_t> letter_to_bin_;
 };

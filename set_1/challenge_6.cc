@@ -54,31 +54,35 @@ int main(int, char*[]) {
         }
     }
 
-    std::ifstream in_fstream("6.txt");
-    std::stringstream in_strm;
-    in_strm << in_fstream.rdbuf();
-    std::string input = in_strm.str();
-    /**
-    Base64 base64;
-    std::vector<uint8_t> base64_bytes = base64_encoder.FromString(input);
-    int key_size = FindKeySize(input);
+    std::ifstream input_file("6.txt");
+    std::stringstream input_stream;
+    while (!input_file.eof()) {
+        std::string line;
+        std::getline(input_file, line);
+        input_stream << line;
+    }
+    std::string input = input_stream.str();
+
+    std::vector<uint8_t> base64_bytes = base64.FromString(input);
+    std::vector<uint8_t> encrypted = base64.Decode(base64_bytes);
+    size_t key_size = FindKeySize(encrypted);
     std::cout << "Key size: " << key_size << std::endl;
 
     // Break input into blocks
     std::vector<std::vector<uint8_t>> blocks;
-    while (!in.eof()) {
+    for (size_t i = 0; i < base64_bytes.size();) {
         blocks.emplace_back();
-        for (int i = 0; i < key_size; ++i) {
-            blocks.back().emplace_back(static_cast<uint8_t>(in.get()));
+        for (size_t j = 0; (j < key_size) && (i < base64_bytes.size()); ++j) {
+            blocks.back().emplace_back(base64_bytes.at(i++));
         }
     }
 
-    // for (int i = 0; i < 10; ++i) {
-    //     for (size_t j = 0; j < blocks[i].size(); ++j) {
-    //         std::cout << blocks[i][j] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
+    for (int i = 0; i < 10; ++i) {
+        for (size_t j = 0; j < blocks[i].size(); ++j) {
+            std::cout << (int)blocks[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
 
     // Transpose blocks
     std::vector<std::vector<uint8_t>> transposed;
@@ -91,12 +95,12 @@ int main(int, char*[]) {
         }
     }
 
-    // for (int i = 0; i < 3; ++i) {
-    //     for (size_t j = 0; j < 10; ++j) {
-    //         std::cout << transposed[i][j] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
+    for (int i = 0; i < 3; ++i) {
+        for (size_t j = 0; j < 10; ++j) {
+            std::cout << (int)transposed[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
 
     std::vector<uint8_t> keys;
     for (size_t i = 0; i < transposed.size(); ++i) {
@@ -107,21 +111,14 @@ int main(int, char*[]) {
 
     std::cout << "Key found: ";
     for (auto key : keys) {
-        std::cout << (int)key << " ";
+        std::cout << key << " ";
     }
     std::cout << std::endl;
 
-    in.seekg(std::ios::beg);
-    std::vector<uint8_t> input;
-    while (!in.eof()) {
-        input.push_back(0);
-        in.read(reinterpret_cast<char*>(&input.back()), 1);
-    }
-    std::cout << "Done reading" << std::endl;
-
+/*
     XorRepeatEncoder encoder;
     encoder.SetKey(keys);
-    std::vector<uint8_t> output = encoder.Encode(input);
+    std::vector<uint8_t> output = encoder.Encode(encrypted);
     std::string output_str(output.begin(), output.end());
     std::cout << "Output: " << output_str << std::endl;
     */
