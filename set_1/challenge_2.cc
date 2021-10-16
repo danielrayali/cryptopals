@@ -10,8 +10,8 @@ int main(int, char*[]) {
     std::string expected("746865206b696420646f6e277420706c6179");
 
     HexEncoder hex_encoder;
-    std::vector<uint8_t> left_bytes = hex_encoder.ToBytes(left);
-    std::vector<uint8_t> right_bytes = hex_encoder.ToBytes(right);
+    std::vector<uint8_t> left_bytes = hex_encoder.FromString(left);
+    std::vector<uint8_t> right_bytes = hex_encoder.FromString(right);
     std::vector<uint8_t> xored_bytes = XorEqual(left_bytes, right_bytes);
 
     std::string xored = hex_encoder.ToString(xored_bytes);

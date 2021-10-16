@@ -16,7 +16,7 @@ int main(int, char*[]) {
     std::string expected("SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t");
 
     HexEncoder hex_encoder;
-    std::vector<uint8_t> bytes = hex_encoder.ToBytes(input);
+    std::vector<uint8_t> bytes = hex_encoder.FromString(input);
 
     Base64 base64;
     std::vector<uint8_t> base64_bytes = base64.Encode(bytes);

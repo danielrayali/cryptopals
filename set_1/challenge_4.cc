@@ -10,7 +10,7 @@ int main(int,char*[]) {
     std::string line;
     XorKeyFinder finder;
     while (getline(input, line)) {
-        std::vector<uint8_t> bytes = encoder.ToBytes(line);
+        std::vector<uint8_t> bytes = encoder.FromString(line);
         finder.Search(bytes);
     }
     finder.Print();

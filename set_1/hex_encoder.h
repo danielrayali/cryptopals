@@ -28,7 +28,7 @@ public:
     // ascii:                       49         27         6d
     // to bytes:            0b01001001 0b00100111 0b01101101
     // output vector index:          0          1          2
-    std::vector<uint8_t> ToBytes(const std::string& hex_string) const {
+    std::vector<uint8_t> FromString(const std::string& hex_string) const {
         std::vector<uint8_t> bytes;
         for (size_t i = 0; i < hex_string.size(); i += 2) {
             bytes.emplace_back(this->HexToBinary(hex_string.at(i)) << 4 |

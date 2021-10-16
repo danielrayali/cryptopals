@@ -14,7 +14,7 @@ int main(int, char*[]) {
 
     std::string input_str{"1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"};
     HexEncoder hex_encoder;
-    input = hex_encoder.ToBytes(input_str);
+    input = hex_encoder.FromString(input_str);
 
     XorKeyFinder finder;
     finder.Search(input);
