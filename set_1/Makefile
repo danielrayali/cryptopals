@@ -18,7 +18,7 @@ challenge_5: challenge_5.cc hex_encoder.h xor.h
 xor: xor_main.cc hex_encoder.h xor.h
 	clang -g -Wall -Wextra -Werror -std=c++2a -o $@ $< -lstdc++
 
-challenge_6: challenge_6.cc bitset.h bitset.cc base64.h
+challenge_6: challenge_6.cc bitset.h bitset.cc base64.h util.h
 	clang -g -Wall -Wextra -Werror -std=c++2a -o $@ $< bitset.cc -lstdc++
 
 clean:

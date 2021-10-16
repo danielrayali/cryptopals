@@ -13,8 +13,13 @@ int FindKeySize(const std::vector<uint8_t>& input) {
     float lowest_distance = std::numeric_limits<float>::max();
     size_t key_size = 0;
     for (size_t i = 2; i < 40; ++i) {
-        float distance = CalculateHammingDistance(Slice(input, 0, i), Slice(input, i, i));
-        distance /= static_cast<float>(i);
+        float distance = CalculateHammingDistance(Slice(input, 0, i), Slice(input, i, i)) / (float(i));
+        distance += CalculateHammingDistance(Slice(input, 0, i), Slice(input, i * 2, i)) / (float(i));
+        distance += CalculateHammingDistance(Slice(input, 0, i), Slice(input, i * 3, i)) / (float(i));
+        distance += CalculateHammingDistance(Slice(input, i, i), Slice(input, i * 2, i)) / (float(i));
+        distance += CalculateHammingDistance(Slice(input, i, i), Slice(input, i * 3, i)) / (float(i));
+        distance += CalculateHammingDistance(Slice(input, i * 2, i), Slice(input, i * 3, i)) / (float(i));
+        distance /= static_cast<float>(6);
         if (distance < lowest_distance) {
             lowest_distance = distance;
             key_size = i;
@@ -23,23 +28,42 @@ int FindKeySize(const std::vector<uint8_t>& input) {
     return key_size;
 }
 
-int main(int, char* argv[]) {
+// int main(int argc, char* argv[]) {
+int main(int , char* []) {
     // Hamming distance test
-    std::string left("this is a test");
-    std::string right("wokka wokka!!!");
-    std::cout << "First string: " << left << std::endl;
-    std::cout << "Second string: " << right << std::endl;
-    std::cout << "Hamming distance: " << CalculateHammingDistance({left}, {right}) << std::endl;
+    {
+        std::string left("this is a test");
+        std::string right("wokka wokka!!!");
+        std::cout << "First string: " << left << std::endl;
+        std::cout << "Second string: " << right << std::endl;
+        std::cout << "Hamming distance: " << CalculateHammingDistance({left}, {right}) << std::endl;
+    }
 
     // Base64 test
     Base64 base64;
-    std::vector<uint8_t> orig{ 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF };
-    std::vector<uint8_t> enc = base64.Encode(orig);
-    std::vector<uint8_t> dec = base64.Decode(enc);
-    for (size_t i = 0; i < orig.size(); ++i) {
-        if (orig[i] != dec[i]) {
-            std::cerr << "Error in Base64 at " << i << std::endl;
-            return 1;
+    {
+        std::vector<uint8_t> orig;
+        for (size_t i = 0; i < 10000; ++i) {
+            orig.push_back(rand());
+        }
+        std::vector<uint8_t> enc = base64.Encode(orig);
+        std::vector<uint8_t> dec = base64.Decode(enc);
+        std::vector<uint8_t> reenc = base64.Encode(dec);
+        std::string enc_to_str = base64.ToString(enc);
+        std::vector<uint8_t> enc_from_str = base64.FromString(enc_to_str);
+        for (size_t i = 0; i < orig.size(); ++i) {
+            if (enc[i] != reenc[i]) {
+                std::cerr << "Error is Base64 string function at " << i << std::endl;
+                return 1;
+            }
+            if (enc[i] != enc_from_str[i]) {
+                std::cerr << "Error is Base64 string function at " << i << std::endl;
+                return 1;
+            }
+            if (orig[i] != dec[i]) {
+                std::cerr << "Error in Base64 at " << i << std::endl;
+                return 1;
+            }
         }
     }
 
@@ -54,49 +78,44 @@ int main(int, char* argv[]) {
     std::string input = input_stream.str();
 
     // Decode base64
+    std::cout << input.substr(3780) << std::endl;
     std::vector<uint8_t> base64_bytes = base64.FromString(input);
     std::vector<uint8_t> encrypted = base64.Decode(base64_bytes);
 
     // Find the key size
-    size_t key_size = atoi(argv[1]);
-    // size_t key_size = FindKeySize(encrypted);
-    std::cout << "Key size: " << key_size << std::endl;
+    size_t key_size = FindKeySize(encrypted);
 
     // Break input into blocks
     std::vector<std::vector<uint8_t>> blocks;
-    for (size_t i = 0; i < base64_bytes.size();) {
+    size_t num_blocks = encrypted.size() / key_size + 1;
+    size_t last_block = encrypted.size() % key_size;
+    std::cout << "Input size: " << encrypted.size() << std::endl;
+    std::cout << "Key size: " << key_size << std::endl;
+    std::cout << "Num blocks: " << num_blocks << std::endl;
+    std::cout << "Last block: " << last_block << std::endl;
+    for (size_t i = 0; i < num_blocks - 1; ++i) {
         blocks.emplace_back();
-        for (size_t j = 0; (j < key_size) && (i < base64_bytes.size()); ++j) {
-            blocks.back().emplace_back(base64_bytes.at(i++));
+        for (size_t j = 0; j < key_size; ++j) {
+            blocks.back().emplace_back(encrypted.at(i*key_size + j));
         }
     }
 
-    // std::cout << "Blocks:\n";
-    // for (int i = 0; i < 10; ++i) {
-    //     for (size_t j = 0; j < key_size; ++j) {
-    //         std::cout << (int)blocks[i][j] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
+    if (last_block > 0) {
+        blocks.emplace_back();
+        for (size_t i = 0; i < last_block; ++i) {
+            blocks.back().push_back(encrypted.at((num_blocks-1) * key_size + i));
+        }
+    }
 
     // Transpose blocks
-    std::vector<std::vector<uint8_t>> transposed;
-    for (size_t i = 0; i < blocks.size(); ++i) {
-        for (size_t j = 0; j < blocks.at(i).size(); ++j) {
-            if (transposed.size() <= (j% key_size)) {
-                transposed.push_back({});
+    std::vector<std::vector<uint8_t>> transposed(key_size, std::vector<uint8_t>({}));
+    for (size_t i = 0; i < key_size; ++i) {
+        for (size_t j = 0; j < blocks.size(); ++j) {
+            if (blocks.at(j).size() > i) {
+                transposed.at(i).push_back(blocks.at(j).at(i));
             }
-            transposed[j % key_size].push_back(blocks.at(i).at(j));
         }
     }
-
-    // std::cout << "Transposed: " << std::endl;
-    // for (size_t i = 0; i < key_size; ++i) {
-    //     for (size_t j = 0; j < 10; ++j) {
-    //         std::cout << (int)transposed[i][j] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
 
     // Search for the key based on the transposed size
     std::vector<uint8_t> keys;
@@ -117,7 +136,7 @@ int main(int, char* argv[]) {
     encoder.SetKey(keys);
     std::vector<uint8_t> output = encoder.Encode(encrypted);
     std::string output_str(output.begin(), output.end());
-    std::cout << "Output: " << output_str.substr(0, 20) << std::endl;
+    std::cout << "Output: " << output_str << std::endl;
 
     return 0;
 }
