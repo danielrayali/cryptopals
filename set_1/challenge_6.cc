@@ -8,6 +8,7 @@
 #include "base64.h"
 #include "xor_key_finder.h"
 #include "util.h"
+#include "file_reader.h"
 
 int FindKeySize(const std::vector<uint8_t>& input) {
     float lowest_distance = std::numeric_limits<float>::max();
@@ -68,14 +69,7 @@ int main(int , char* []) {
     }
 
     // Read the initial input file
-    std::ifstream input_file("6.txt");
-    std::stringstream input_stream;
-    while (!input_file.eof()) {
-        std::string line;
-        std::getline(input_file, line);
-        input_stream << line;
-    }
-    std::string input = input_stream.str();
+    std::string input = FileReader::Read("6.txt");
 
     // Decode base64
     std::cout << input.substr(3780) << std::endl;
