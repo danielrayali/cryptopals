@@ -2,6 +2,7 @@
 
 #include "base64.h"
 #include "bitset.h"
+#include "aes.h"
 
 int main(int, char*[]) {
     // Hamming distance test
@@ -41,5 +42,21 @@ int main(int, char*[]) {
         }
     }
 
+    std::vector<uint8_t> key{ 0x54, 0x68, 0x61, 0x74, 0x73, 0x20, 0x6D, 0x79,
+                              0x20, 0x4B, 0x75, 0x6E, 0x67, 0x20, 0x46, 0x75 };
+    Aes aes;
+    aes.SetKey(key);
+
+    std::vector<uint8_t> plain_text{ 0x54, 0x77, 0x6F, 0x20, 0x4F, 0x6E, 0x65, 0x20,
+                                     0x4E, 0x69, 0x6E, 0x65, 0x20, 0x54, 0x77, 0x6F };
+    std::vector<uint8_t> cipher_text = aes.Encrypt(plain_text);
+
+    std::vector<uint8_t> decrypted_text = aes.Decrypt(cipher_text);
+    for (size_t i = 0; i < plain_text.size(); ++i) {
+        if (plain_text[i] != decrypted_text[i]) {
+            std::cerr << "Plain text/decrypted text mis-match, index " << i << std::endl;
+            return 1;
+        }
+    }
     return 0;
 }
