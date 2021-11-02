@@ -2,7 +2,11 @@
 
 #include <cstdint>
 #include <vector>
-#include <iomanip>
+#include <cmath>
+#include <utility>
+
+#include "xor.h"
+#include "util.h"
 
 class Aes {
 public:
@@ -11,27 +15,32 @@ public:
     ~Aes() = default;
 
     void SetKey(const std::vector<uint8_t>& key) {
-        key_ = key;
-        std::cout << "key: ";
-        for (size_t i = 0; i < key.size(); ++i) {
-            std::cout << std::hex << (int)key[i] << " ";
-        }
-        std::cout << std::endl;
+        this->GenerateRoundKeys(key);
     }
 
     std::vector<uint8_t> Encrypt(const std::vector<uint8_t>& plain_text) {
-        std::vector<std::vector<uint8_t>> w;
-        for (size_t i = 0 ; i < 4; ++i) {
-            w.push_back({});
-            std::cout << "w[" << i << "]: ";
-            for (size_t j = 0; j < 4; ++j) {
-                w.back().push_back(key_[(i * 4) + j]);
-                std::cout << std::hex << (int)w.back().back() << " ";
-            }
-            std::cout << std::endl;
+        std::vector<uint8_t> cipher_text = XorEqual(plain_text, round_keys_[0]);
+        std::cout << "After round 0 add roundkey: ";
+        PrintHex(cipher_text);
+        std::cout << std::endl;
+
+        for (size_t i = 0; i < cipher_text.size(); ++i) {
+            cipher_text[i] = this->SBox(cipher_text[i]);
         }
-        g_func(w[3]);
-        return plain_text;
+        std::cout << "After round 1 substitutes: ";
+        PrintHex(cipher_text);
+        std::cout << std::endl;
+
+        this->ShiftRow(cipher_text);
+        std::cout << "After round 1 row shifts: ";
+        PrintHex(cipher_text);
+        std::cout << std::endl;
+
+        this->MixColumn(cipher_text);
+        std::cout << "After round 1 mix column: ";
+        PrintHex(cipher_text);
+        std::cout << std::endl;
+        return cipher_text;
     }
 
     std::vector<uint8_t> Decrypt(const std::vector<uint8_t>& cipher_text) {
@@ -41,6 +50,21 @@ public:
 
 private:
     std::vector<uint8_t> key_;
+
+    std::vector<std::vector<uint8_t>> round_keys_;
+
+    std::vector<std::vector<uint8_t>> round_constants_ = {
+        { 0x01, 0x00, 0x00, 0x00 },
+        { 0x02, 0x00, 0x00, 0x00 },
+        { 0x04, 0x00, 0x00, 0x00 },
+        { 0x08, 0x00, 0x00, 0x00 },
+        { 0x10, 0x00, 0x00, 0x00 },
+        { 0x20, 0x00, 0x00, 0x00 },
+        { 0x40, 0x00, 0x00, 0x00 },
+        { 0x80, 0x00, 0x00, 0x00 },
+        { 0x1B, 0x00, 0x00, 0x00 },
+        { 0x36, 0x00, 0x00, 0x00 }
+    };
 
     const uint8_t s_box_[256] = {
         0x63 ,0x7c ,0x77 ,0x7b ,0xf2 ,0x6b ,0x6f ,0xc5 ,0x30 ,0x01 ,0x67 ,0x2b ,0xfe ,0xd7 ,0xab ,0x76,
@@ -60,51 +84,134 @@ private:
         0xe1 ,0xf8 ,0x98 ,0x11 ,0x69 ,0xd9 ,0x8e ,0x94 ,0x9b ,0x1e ,0x87 ,0xe9 ,0xce ,0x55 ,0x28 ,0xdf,
         0x8c ,0xa1 ,0x89 ,0x0d ,0xbf ,0xe6 ,0x42 ,0x68 ,0x41 ,0x99 ,0x2d ,0x0f ,0xb0 ,0x54 ,0xbb ,0x16 };
 
+    inline uint8_t MixColumnMultiply(uint8_t times, uint8_t data) {
+        if (times == 3) {
+            return (((data * 2) ^ (data & 0x80 ? 0x1B : 0)) ^ data);
+        } else if (times == 2) {
+            return ((data * 2) ^ (data & 0x80 ? 0x1B : 0));
+        } else {
+            return data;
+        }
+    }
+
+    void MixColumn(std::vector<uint8_t>& data) {
+        size_t size = sqrt(data.size());
+        std::vector<std::vector<uint8_t>> square = MakeSquareMatrix(data, size);
+        static std::vector<std::vector<uint8_t>> fixed = {
+            { 0x02, 0x01, 0x01, 0x03 },
+            { 0x03, 0x02, 0x01, 0x01 },
+            { 0x01, 0x03, 0x02, 0x01 },
+            { 0x01, 0x01, 0x03, 0x02 }
+        };
+
+        // Destination loop
+        std::vector<std::vector<uint8_t>> output = Zeros(size);
+        for (size_t i = 0; i < size; ++i) {
+            for (size_t j = 0; j < size; ++j) {
+                std::cout << "For [" << i << "][" << j << "] = \n";
+                output[i][j] = 0;
+                for (size_t k = 0; k < size; ++k) {
+                    std::cout << k << ' ' << j << " * " << i << ' ' << k << std::endl;
+                    std::cout << std::hex << (int)fixed[k][j] << " " << (int)square[i][k];
+                    output[i][j] ^= MixColumnMultiply(fixed[k][j], square[i][k]);
+                    std::cout << " = " << std::hex << (int)(MixColumnMultiply(fixed[k][j], square[i][k])) << std::endl;
+                }
+                std::cout << "output: " << std::hex << (int)output[i][j] << std::endl;
+            }
+        }
+
+        data = Concat(output);
+    }
+
+    void ShiftRow(std::vector<uint8_t>& data) {
+        std::vector<uint8_t> source(data);
+        size_t square_size = sqrt(data.size());
+        for (size_t i = 0; i < square_size; ++i) {
+            for (size_t j = 1; j < square_size; ++j) {
+                data[i * square_size + j] = source[(((i + j) % square_size) * square_size) + j];
+            }
+        }
+    }
+
+    void GenerateRoundKeys(const std::vector<uint8_t>& key) {
+        round_keys_ = std::vector<std::vector<uint8_t>>{ 1, key };
+        std::cout << "Round key[0]: ";
+        PrintHex(round_keys_[0]);
+        std::cout << std::endl;
+
+        for (size_t i = 0; i < 10; ++i) {
+            round_keys_.emplace_back(this->GetRoundKey(round_keys_[i], i));
+            std::cout << "Round key[" << i+1 << "]: ";
+            PrintHex(round_keys_.back());
+            std::cout << std::endl;
+        }
+    }
+
     inline uint8_t SBox(const uint8_t value) {
         return s_box_[value];
     }
 
-    void g_func(std::vector<uint8_t>& input) {
+    std::vector<uint8_t> GetRoundKey(const std::vector<uint8_t>& prev_key, const int round) {
+        std::vector<std::vector<uint8_t>> w;
+        for (size_t i = 0 ; i < 4; ++i) {
+            w.push_back({});
+            std::cout << "w[" << i << "]: ";
+            for (size_t j = 0; j < 4; ++j) {
+                w.back().push_back(prev_key[(i * 4) + j]);
+                std::cout << std::hex << (int)w.back().back() << " ";
+            }
+            std::cout << std::endl;
+        }
+
+        w.emplace_back(XorEqual(w[0], g_func(w[3], round_constants_[round])));
+        std::cout << "w[" << 4 << "]: ";
+        PrintHex(w.back());
+        std::cout << std::endl;
+
+        for (size_t i = 1; i < 4; ++i) {
+            std::cout << "w[" << i+4 << "]: ";
+            w.emplace_back(XorEqual(w[i], w[i+3]));
+            PrintHex(w.back());
+            std::cout << std::endl;
+        }
+
+        return Concat( { w.begin() + 4, w.end() } );
+    }
+
+    std::vector<uint8_t> g_func(const std::vector<uint8_t>& input, const std::vector<uint8_t>& round_constant) {
         if (input.size() != 4) {
             throw std::runtime_error("Erroneous size passed to g()");
         }
+
         // Circular byte shift left
-        input.push_back(input[0]);
-        input.erase(input.begin());
+        std::vector<uint8_t> output{input};
+        output.push_back(output[0]);
+        output.erase(output.begin());
 
         std::cout << "Shifted:              ";
-        for (size_t i = 0; i < input.size(); ++i) {
-            std::cout << std::hex << (int)input[i] << " ";
-        }
+        PrintHex(output);
         std::cout << std::endl;
 
         // Byte substitution (S-Box)
-        for (size_t i = 0; i < input.size(); ++i) {
-            input[i] = this->SBox(input[i]);
+        for (size_t i = 0; i < output.size(); ++i) {
+            output[i] = this->SBox(output[i]);
         }
 
         std::cout << "S-Boxed:              ";
-        for (size_t i = 0; i < input.size(); ++i) {
-            std::cout << std::hex << (int)input[i] << " ";
-        }
+        PrintHex(output);
         std::cout << std::endl;
 
-        std::vector<uint8_t> round_constant{ 0x01, 0x00, 0x00, 0x00 };
         std::cout << "Round constant:       ";
-        for (size_t i = 0; i < input.size(); ++i) {
-            std::cout << std::hex << std::setfill('0') << std::setw(2) << (int)round_constant[i] << " ";
-        }
+        PrintHex(round_constant);
         std::cout << std::endl;
 
         // Add round constant
-        for (size_t i = 0; i < round_constant.size(); ++i) {
-            input[i] += round_constant[i];
-        }
+        output = XorEqual(output, round_constant);
 
         std::cout << "After round constant: ";
-        for (size_t i = 0; i < input.size(); ++i) {
-            std::cout << std::hex << (int)input[i] << " ";
-        }
+        PrintHex(output);
         std::cout << std::endl;
+
+        return output;
     }
 };

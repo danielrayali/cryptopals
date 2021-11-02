@@ -44,6 +44,14 @@ int main(int, char*[]) {
 
     std::vector<uint8_t> key{ 0x54, 0x68, 0x61, 0x74, 0x73, 0x20, 0x6D, 0x79,
                               0x20, 0x4B, 0x75, 0x6E, 0x67, 0x20, 0x46, 0x75 };
+
+    std::cout << "Square test:\n";
+    std::vector<std::vector<uint8_t>> square_key = MakeSquareMatrix(key, 4);
+    for (size_t i = 0; i < square_key.size(); i++) {
+        PrintHex(square_key.at(i));
+    }
+    std::cout << std::endl;
+
     Aes aes;
     aes.SetKey(key);
 
