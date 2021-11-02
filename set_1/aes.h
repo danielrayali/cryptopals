@@ -40,6 +40,11 @@ public:
         std::cout << "After round 1 mix column: ";
         PrintHex(cipher_text);
         std::cout << std::endl;
+
+        std::cout << "After round 1 key add: ";
+        PrintHex(XorEqual(cipher_text, round_keys_[1]));
+        std::cout << std::endl;
+
         return cipher_text;
     }
 
