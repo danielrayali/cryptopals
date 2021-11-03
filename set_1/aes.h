@@ -19,31 +19,57 @@ public:
     }
 
     std::vector<uint8_t> Encrypt(const std::vector<uint8_t>& plain_text) {
-        std::vector<uint8_t> cipher_text = XorEqual(plain_text, round_keys_[0]);
+        std::vector<uint8_t> cipher_text, round_text;
+        round_text = XorEqual(plain_text, round_keys_[0]);
+
         std::cout << "After round 0 add roundkey: ";
-        PrintHex(cipher_text);
+        PrintHex(round_text);
         std::cout << std::endl;
 
-        for (size_t i = 0; i < cipher_text.size(); ++i) {
-            cipher_text[i] = this->SBox(cipher_text[i]);
+        for (size_t i = 1; i < 10; ++i) {
+            for (size_t i = 0; i < round_text.size(); ++i) {
+                round_text[i] = this->SBox(round_text[i]);
+            }
+
+            std::cout << "After round " << i << " substitutes: ";
+            PrintHex(round_text);
+            std::cout << std::endl;
+
+            this->ShiftRow(round_text);
+            std::cout << "After round " << i << " row shifts: ";
+            PrintHex(round_text);
+            std::cout << std::endl;
+
+            this->MixColumn(round_text);
+            std::cout << "After round " << i << " mix column: ";
+            PrintHex(round_text);
+            std::cout << std::endl;
+
+            round_text = XorEqual(round_text, round_keys_[i]);
+
+            std::cout << "After round " << i << " add roundkey: ";
+            PrintHex(round_text);
+            std::cout << std::endl;
         }
-        std::cout << "After round 1 substitutes: ";
-        PrintHex(cipher_text);
+
+        for (size_t i = 0; i < round_text.size(); ++i) {
+            round_text[i] = this->SBox(round_text[i]);
+        }
+        std::cout << "After round 10 substitutes: ";
+        PrintHex(round_text);
         std::cout << std::endl;
 
-        this->ShiftRow(cipher_text);
-        std::cout << "After round 1 row shifts: ";
-        PrintHex(cipher_text);
+        this->ShiftRow(round_text);
+        std::cout << "After round 10 row shifts: ";
+        PrintHex(round_text);
         std::cout << std::endl;
 
-        this->MixColumn(cipher_text);
-        std::cout << "After round 1 mix column: ";
-        PrintHex(cipher_text);
+        round_text = XorEqual(round_text, round_keys_[10]);
+        std::cout << "After round 10 add roundkey: ";
+        PrintHex(round_text);
         std::cout << std::endl;
 
-        std::cout << "After round 1 key add: ";
-        PrintHex(XorEqual(cipher_text, round_keys_[1]));
-        std::cout << std::endl;
+        cipher_text = round_text;
 
         return cipher_text;
     }
@@ -113,15 +139,15 @@ private:
         std::vector<std::vector<uint8_t>> output = Zeros(size);
         for (size_t i = 0; i < size; ++i) {
             for (size_t j = 0; j < size; ++j) {
-                std::cout << "For [" << i << "][" << j << "] = \n";
+                // std::cout << "For [" << i << "][" << j << "] = \n";
                 output[i][j] = 0;
                 for (size_t k = 0; k < size; ++k) {
-                    std::cout << k << ' ' << j << " * " << i << ' ' << k << std::endl;
-                    std::cout << std::hex << (int)fixed[k][j] << " " << (int)square[i][k];
+                    // std::cout << k << ' ' << j << " * " << i << ' ' << k << std::endl;
+                    // std::cout << std::hex << (int)fixed[k][j] << " " << (int)square[i][k];
                     output[i][j] ^= MixColumnMultiply(fixed[k][j], square[i][k]);
-                    std::cout << " = " << std::hex << (int)(MixColumnMultiply(fixed[k][j], square[i][k])) << std::endl;
+                    // std::cout << " = " << std::hex << (int)(MixColumnMultiply(fixed[k][j], square[i][k])) << std::endl;
                 }
-                std::cout << "output: " << std::hex << (int)output[i][j] << std::endl;
+                // std::cout << "output: " << std::hex << (int)output[i][j] << std::endl;
             }
         }
 
