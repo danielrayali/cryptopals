@@ -8,11 +8,11 @@
 #include "xor.h"
 #include "util.h"
 
-class Aes {
+class Aes128EcbCms {
 public:
-    Aes() = default;
+    Aes128EcbCms() = default;
 
-    ~Aes() = default;
+    ~Aes128EcbCms() = default;
 
     void SetKey(const std::vector<uint8_t>& key) {
         this->GenerateRoundKeys(key);
@@ -20,8 +20,8 @@ public:
 
     std::vector<uint8_t> Encrypt(const std::vector<uint8_t>& plain_text) {
         std::vector<uint8_t> cipher_text;
-        for (size_t i = 0; i < plain_text.size(); i += 128/8) {
-            std::vector<uint8_t> block_cipher_text = this->EncryptRound(Slice(plain_text, i, 128/8));
+        for (size_t i = 0; i < plain_text.size(); i += kKeySize) {
+            std::vector<uint8_t> block_cipher_text = this->EncryptRound(Slice(plain_text, i, kKeySize));
             std::cout << "Block text: ";
             for (auto datum : block_cipher_text) {
                 std::cout << std::setfill('0') << std::setw(2) << std::hex << (int)datum;
@@ -30,8 +30,11 @@ public:
             cipher_text.insert(cipher_text.end(), block_cipher_text.begin(), block_cipher_text.end());
         }
 
-        size_t remainder = (plain_text.size() % (128/8));
+        size_t remainder = (plain_text.size() % (kKeySize));
         std::vector<uint8_t> last_block = Slice(plain_text, (plain_text.size() - remainder), remainder);
+        while (last_block.size() < kKeySize) {
+            last_block.emplace_back(kKeySize - remainder);
+        }
         std::vector<uint8_t> last_block_cipher_text = this->EncryptRound(last_block);
         cipher_text.insert(cipher_text.end(), last_block_cipher_text.begin(), last_block_cipher_text.end());
 
@@ -50,6 +53,8 @@ public:
     }
 
 private:
+    const size_t kKeySize = (128/8);
+
     std::vector<uint8_t> key_;
 
     std::vector<std::vector<uint8_t>> round_keys_;
@@ -86,13 +91,12 @@ private:
         0x8c ,0xa1 ,0x89 ,0x0d ,0xbf ,0xe6 ,0x42 ,0x68 ,0x41 ,0x99 ,0x2d ,0x0f ,0xb0 ,0x54 ,0xbb ,0x16 };
 
     std::vector<uint8_t> EncryptRound(const std::vector<uint8_t>& block) {
-        std::vector<uint8_t> padded_block(block);
-        while ((padded_block.size() == 0) || (padded_block.size() % (128/8) != 0)) {
-            padded_block.push_back(0);
+        if (block.size() != kKeySize) {
+            throw std::runtime_error("Cannot encrypt block that is not 128 bits wide");
         }
 
         std::vector<uint8_t> cipher_text, round_text;
-        round_text = XorEqual(padded_block, round_keys_[0]);
+        round_text = XorEqual(block, round_keys_[0]);
 
         std::cout << "After round 0 add roundkey: ";
         PrintHex(round_text);

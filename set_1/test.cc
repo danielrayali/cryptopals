@@ -57,11 +57,10 @@ int main(int, char*[]) {
     }
     std::cout << std::endl;
 
-    Aes aes;
+    Aes128EcbCms aes;
     aes.SetKey(key);
 
-    std::vector<uint8_t> plain_text;//{ 0x54, 0x77, 0x6F, 0x20, 0x4F, 0x6E, 0x65, 0x20,
-                                    // 0x4E, 0x69, 0x6E, 0x65, 0x20, 0x54, 0x77, 0x6F };
+    std::vector<uint8_t> plain_text;
     for (size_t i = 0; i < 1024; ++i) {
         plain_text.emplace_back(('a' + (i % 26)));
         std::cout << plain_text.back();
