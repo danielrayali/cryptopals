@@ -11,7 +11,7 @@ int main(int, char*[]) {
     Base64 base64;
     std::vector<uint8_t> base64_bytes = base64.FromString(base64_str);
     std::vector<uint8_t> encrypted = base64.Decode(base64_bytes);
-    Aes128 aes;
+    Aes128EcbCms aes;
     std::vector<uint8_t> decrypted = aes.Decrypt(encrypted);
     std::cout << "Decyrpted:\n" << (char*)decrypted.data() << std::endl;
     return 0;
