@@ -25,7 +25,7 @@ test: test.cc bitset.h bitset.cc base64.h util.h aes.h
 	clang -g -Wall -Wextra -Werror -std=c++2a -o $@ $< bitset.cc -lstdc++ -lm
 
 challenge_7: challenge_7.cc aes.h
-	clang -g -Wall -Wextra -Werror -std=c++2a -o $@ $< -lstdc++
+	clang -g -Wall -Wextra -Werror -std=c++2a -o $@ $< -lstdc++ -lm
 
 clean:
 	rm -rf challenge_1 challenge_2 challenge_3 challenge_4 challenge_5 xor challenge_6
