@@ -28,7 +28,7 @@ void PrintAscii(const std::vector<uint8_t>& data, size_t count) {
         count = data.size();
     }
     for (size_t i = 0; i < count; ++i) {
-        std::cout << data[i] << " ";
+        std::cout << data[i];
     }
 }
 
